@@ -9,7 +9,7 @@ from einops import rearrange
 from fire import Fire
 from PIL import ExifTags, Image
 
-from flux.sampling import denoise_midpoint, denoise_fireflow, denoise_rf_solver, denoise, denoise_momentum, denoise_momentum_rsp, get_schedule, prepare, unpack
+from flux.sampling import denoise_midpoint, denoise_fireflow, denoise_rf_solver, denoise, get_schedule, prepare, unpack
 from flux.util import (configs, embed_watermark, load_ae, load_clip,
                        load_flow_model, load_t5, save_velocity_distribution)
 from transformers import pipeline
@@ -80,6 +80,8 @@ def main(
     start_layer_index = args.start_layer_index
     end_layer_index = args.end_layer_index
     seed = args.seed if args.seed > 0 else None
+
+    nsfw_classifier = pipeline("image-classification", model="Falconsai/nsfw_image_detection", device=device)
 
     if name not in configs:
         available = ", ".join(configs.keys())
@@ -171,8 +173,6 @@ def main(
             'rf_solver' : denoise_rf_solver,
             'fireflow' : denoise_fireflow,
             'rf_midpoint' : denoise_midpoint,
-            'momentum_rsp': denoise_momentum_rsp,
-            'momentum': denoise_momentum,
         }
         if args.sampling_strategy not in denoise_strategies:
             raise ExceptionType("Unknown denoising strategy")
@@ -223,7 +223,7 @@ def main(
             x = rearrange(x[0], "c h w -> h w c")
 
             img = Image.fromarray((127.5 * (x + 1.0)).cpu().byte().numpy())
-            nsfw_score = 0
+            nsfw_score = [x["score"] for x in nsfw_classifier(img) if x["label"] == "nsfw"][0]
             
             if nsfw_score < NSFW_THRESHOLD:
                 exif_data = Image.Exif()

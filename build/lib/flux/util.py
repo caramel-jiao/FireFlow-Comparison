@@ -29,7 +29,7 @@ configs = {
         repo_id="black-forest-labs/FLUX.1-dev",
         repo_flow="flux1-dev.safetensors",
         repo_ae="ae.safetensors",
-        ckpt_path='/home/jovyan/shared/jiaoguanlong/shared-models/fireflow/FLUX.1-dev',
+        ckpt_path=os.getenv("FLUX_DEV"),
         params=FluxParams(
             in_channels=64,
             vec_in_dim=768,
@@ -130,13 +130,11 @@ def load_flow_model(name: str, device: str | torch.device = "cuda", hf_download:
 
 def load_t5(device: str | torch.device = "cuda", max_length: int = 512) -> HFEmbedder:
     # max length 64, 128, 256 and 512 should work (if your sequence is short enough)
-    # return HFEmbedder("google/t5-v1_1-xxl", max_length=max_length, is_clip=False, torch_dtype=torch.bfloat16).to(device)
-    return HFEmbedder("/home/jovyan/shared/jiaoguanlong/shared-models/fireflow/t5-v1_1-xxl", max_length=max_length, is_clip=False, torch_dtype=torch.bfloat16).to(device)
+    return HFEmbedder("google/t5-v1_1-xxl", max_length=max_length, is_clip=False, torch_dtype=torch.bfloat16).to(device)
 
 
 def load_clip(device: str | torch.device = "cuda") -> HFEmbedder:
-    # return HFEmbedder("openai/clip-vit-large-patch14", max_length=77, is_clip=True, torch_dtype=torch.bfloat16).to(device)
-    return HFEmbedder("/home/jovyan/shared/jiaoguanlong/shared-models/fireflow/clip-vit-large-patch14", max_length=77, is_clip=True, torch_dtype=torch.bfloat16).to(device)
+    return HFEmbedder("openai/clip-vit-large-patch14", max_length=77, is_clip=True, torch_dtype=torch.bfloat16).to(device)
 
 
 def load_ae(name: str, device: str | torch.device = "cuda", hf_download: bool = True) -> AutoEncoder:
